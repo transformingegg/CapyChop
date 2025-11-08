@@ -2,8 +2,9 @@
   "name": "capychop",
   "version": "1.0.0",
   "description": "Chop Chop Precision Slice Game",
-  "main": "server.js",
+  "main": "index.html",
   "scripts": {
+    "build": "echo 'Static site - no build required'",
     "start": "node server.js",
     "dev": "node server.js"
   },

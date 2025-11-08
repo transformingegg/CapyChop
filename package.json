@@ -2,11 +2,14 @@
   "name": "capychop",
   "version": "1.0.0",
   "description": "Chop Chop Precision Slice Game",
-  "main": "index.html",
+  "main": "server.js",
+  "private": true,
   "scripts": {
-    "build": "echo 'Static site - no build required'",
     "start": "node server.js",
     "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
   },
   "keywords": ["game", "image", "slice"],
   "author": "",

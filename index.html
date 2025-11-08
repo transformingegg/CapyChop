@@ -1010,23 +1010,16 @@
         let currentX = canvasSize / 2;
         let currentAngle = 0;
 
-        // Load list of available images
-        async function loadImageList() {
-            try {
-                const response = await fetch('/images/');
-                const text = await response.text();
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(text, 'text/html');
-                const links = Array.from(doc.querySelectorAll('a'))
-                    .map(a => a.getAttribute('href'))
-                    .filter(href => href && (href.endsWith('.png') || href.endsWith('.jpg') || href.endsWith('.jpeg')));
-                availableImages = links.map(link => `/images/${link}`);
-                if (availableImages.length === 0) {
-                    alert('No images found in the images folder! Please add PNG/JPG images to the images folder.');
-                }
-            } catch (error) {
-                console.error('Error loading image list:', error);
-                alert('Could not load images from folder');
+        // List of available images (hardcoded for static hosting)
+        availableImages = [
+            '/images/capychop.png',
+            '/images/tester.png'
+        ];
+        
+        function loadImageList() {
+            // Images are hardcoded above for static hosting compatibility
+            if (availableImages.length === 0) {
+                alert('No images found! Please add images to the images folder.');
             }
         }
 
@@ -1645,7 +1638,7 @@
         });
         
         // Initialize
-        loadImages();
+        loadImageList();
     </script>
 </body>
 </html>

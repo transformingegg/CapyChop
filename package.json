@@ -1,0 +1,13 @@
+{
+  "name": "capychop",
+  "version": "1.0.0",
+  "description": "Chop Chop Precision Slice Game",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": ["game", "image", "slice"],
+  "author": "",
+  "license": "MIT"
+}

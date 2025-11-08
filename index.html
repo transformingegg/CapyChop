@@ -1,0 +1,1651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chop Chop Game</title>
+    <style>
+        @font-face {
+            font-family: 'Super Trend';
+            src: url('SuperTrend.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        
+        * { 
+            box-sizing: border-box;
+            font-family: 'Super Trend', Arial, sans-serif;
+        }
+        
+        /* Desktop wrapper for mobile preview */
+        html {
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        body { 
+            margin: 0;
+            padding: 10px;
+            font-family: 'Super Trend', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            width: calc(100vh * 9 / 16);
+            max-width: 100vw;
+            overflow: hidden;
+            background: url('benchtop.png') center center / cover no-repeat;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: absolute;
+            top: 45%;
+            left: 55%;
+            transform: translate(-50%, -50%) rotate(15deg);
+            width: 85vh;
+            height: 85vh;
+            background: url('ChoppingBoard.png') center center / contain no-repeat;
+            z-index: 0;
+            pointer-events: none;
+        }
+        
+        body::after {
+            content: '';
+            position: absolute;
+            top: -5vh;
+            left: 0.5vh;
+            width: 30vh;
+            height: 30vh;
+            background: url('capychop.png') center center / contain no-repeat;
+            z-index: 10;
+            pointer-events: none;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.6));
+        }
+        h1 { 
+            font-size: clamp(1rem, 4vw, 1.5rem);
+            margin: 5px 0;
+            text-align: center;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            position: relative;
+            z-index: 10;
+        }
+        canvas { 
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+        #gameContainer { 
+            position: absolute;
+            top: 52%;
+            left: 55%;
+            transform: translate(-50%, -50%);
+            width: 60vh;
+            height: 60vh;
+            margin: 0;
+            background: transparent;
+            border-radius: 8px;
+            overflow: visible;
+            flex-shrink: 0;
+            z-index: 1;
+        }
+        #mainCanvas { 
+            position: absolute; 
+            top: 0; 
+            left: 0;
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(-3px 3px 6px rgba(0, 0, 0, 0.8));
+        }
+        #leftCanvas, #rightCanvas { 
+            position: absolute; 
+            top: 0; 
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s ease-out;
+            filter: drop-shadow(-3px 3px 6px rgba(0, 0, 0, 0.8));
+        }
+        #knifeCanvas { 
+            position: absolute; 
+            top: 0; 
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        #info { 
+            margin: 5px 0;
+            text-align: center;
+            width: 100%;
+            max-width: 512px;
+            font-size: clamp(0.8rem, 2vw, 1rem);
+            color: white;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+            position: relative;
+            z-index: 10;
+            display: none;
+        }
+        #info input[type="number"] {
+            width: 50px;
+            padding: 4px;
+            font-size: clamp(0.8rem, 2vw, 1rem);
+        }
+        #info button {
+            padding: 6px 12px;
+            font-size: clamp(0.8rem, 2vw, 1rem);
+            margin-top: 5px;
+            cursor: pointer;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        #info button:hover {
+            background: #0056b3;
+        }
+        input[type="file"] {
+            margin: 5px 0;
+            padding: 4px;
+            font-size: clamp(0.7rem, 2vw, 0.9rem);
+            background: white;
+            border-radius: 4px;
+        }
+        #results {
+            text-align: center;
+            padding: 5px;
+            max-width: 512px;
+            width: 100%;
+            font-size: clamp(0.8rem, 2vw, 1rem);
+            color: white;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+            position: absolute;
+            bottom: 2vh;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+        
+        /* Mobile: full width */
+        @media (max-aspect-ratio: 9/16) {
+            html {
+                display: block;
+            }
+            body {
+                width: 100vw;
+                height: 100vh;
+            }
+        }
+        
+        @media (max-width: 600px) {
+            body { padding: 5px; }
+            h1 { font-size: 1rem; margin: 3px 0; }
+        }
+        @media (max-height: 700px) {
+            body { padding: 5px; }
+            h1 { font-size: 0.9rem; margin: 2px 0; }
+            #info, #results { font-size: 0.75rem; }
+        }
+        
+        /* Goal Banner Animation */
+        #goalBanner {
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100vh * 9 / 16 + 2px);
+            max-width: 100vw;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 100;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        #goalBanner.show {
+            display: flex !important;
+            animation: fadeIn 0.4s ease-in;
+        }
+        
+        #goalBanner.hiding {
+            animation: fadeOut 0.5s ease-out forwards;
+        }
+        
+        .banner-content {
+            position: relative;
+            text-align: center;
+            padding: 5vh;
+            transform: skewY(-3deg);
+        }
+        
+        .banner-stripe {
+            position: absolute;
+            width: 100%;
+            height: 15vh;
+            left: 0;
+            background: linear-gradient(135deg, #87CEEB 0%, #4682B4 50%, #87CEEB 100%);
+            transform: skewY(-3deg);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6);
+        }
+        
+        .banner-stripe:nth-child(1) {
+            top: 35%;
+            opacity: 0.7;
+        }
+        
+        .banner-stripe:nth-child(2) {
+            top: 40%;
+            background: linear-gradient(135deg, #5F9EA0 0%, #20B2AA 50%, #5F9EA0 100%);
+            opacity: 0.8;
+        }
+        
+        .banner-stripe:nth-child(3) {
+            top: 45%;
+            background: linear-gradient(135deg, #87CEEB 0%, #4682B4 50%, #87CEEB 100%);
+            opacity: 0.9;
+        }
+        
+        .banner-stripe:nth-child(4) {
+            top: 50%;
+            background: linear-gradient(135deg, #E0F6FF 0%, #B0E0E6 50%, #E0F6FF 100%);
+            opacity: 0.5;
+        }
+        
+        .banner-text {
+            position: relative;
+            z-index: 10;
+            color: white;
+            font-family: 'Super Trend', Arial, sans-serif;
+            text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.9);
+            font-weight: normal;
+            letter-spacing: 0.1em;
+        }
+        
+        .banner-text-small {
+            font-size: 2.8vh;
+            margin-bottom: 1vh;
+        }
+        
+        .banner-text-large {
+            font-size: 12vh;
+            color: #FFD700;
+            text-shadow: 3px 3px 8px rgba(0, 0, 0, 0.9);
+            -webkit-text-stroke: 1px white;
+            font-weight: bold;
+            line-height: 1;
+        }
+        
+        .banner-text-small-bottom {
+            font-size: 2.8vh;
+            margin-top: 1vh;
+        }
+        
+        .banner-hint {
+            position: absolute;
+            bottom: 5vh;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 2.5vh;
+            text-align: center;
+            line-height: 1.4;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        
+        @keyframes slideInFromLeft {
+            from { 
+                transform: translateX(-150%) skewY(-3deg);
+            }
+            to { 
+                transform: translateX(0) skewY(-3deg);
+            }
+        }
+        
+        @keyframes slideOutToRight {
+            from { 
+                transform: translateX(0) skewY(-3deg);
+            }
+            to { 
+                transform: translateX(150%) skewY(-3deg);
+            }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+        
+        #goalBanner.show .banner-stripe {
+            animation: slideInFromLeft 0.4s ease-out forwards;
+        }
+        
+        #goalBanner.show .banner-stripe:nth-child(1) {
+            animation-delay: 0s;
+        }
+        
+        #goalBanner.show .banner-stripe:nth-child(2) {
+            animation-delay: 0.05s;
+        }
+        
+        #goalBanner.show .banner-stripe:nth-child(3) {
+            animation-delay: 0.1s;
+        }
+        
+        #goalBanner.show .banner-stripe:nth-child(4) {
+            animation-delay: 0.15s;
+        }
+        
+        #goalBanner.show .banner-content {
+            animation: fadeIn 0.3s ease-in 0.3s forwards;
+            opacity: 0;
+        }
+        
+        #goalBanner.hiding .banner-stripe {
+            animation: slideOutToRight 0.4s ease-in forwards;
+        }
+        
+        #goalBanner.hiding .banner-stripe:nth-child(1) {
+            animation-delay: 0s;
+        }
+        
+        #goalBanner.hiding .banner-stripe:nth-child(2) {
+            animation-delay: 0.05s;
+        }
+        
+        #goalBanner.hiding .banner-stripe:nth-child(3) {
+            animation-delay: 0.1s;
+        }
+        
+        #goalBanner.hiding .banner-stripe:nth-child(4) {
+            animation-delay: 0.15s;
+        }
+        
+        #goalBanner.hiding .banner-content {
+            animation: fadeIn 0.2s ease-out reverse;
+        }
+        
+        /* Results Panel */
+        #resultsPanel {
+            position: absolute;
+            bottom: -100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            height: 60%;
+            background: linear-gradient(180deg, #ADD8E6 0%, #87CEEB 100%);
+            border-radius: 20px;
+            border: 10px solid #552e15;
+            box-shadow: 
+                -4px 4px 12px rgba(0, 0, 0, 0.7),
+                inset -3px 3px 6px rgba(0, 0, 0, 0.4);
+            z-index: 2;
+            transition: bottom 0.5s ease-out;
+        }
+        
+        #resultsPanel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('capychop.png');
+            background-position: center center;
+            background-size: 250%;
+            background-repeat: no-repeat;
+            opacity: 0.08;
+            border-radius: 10px;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        #resultsPanel.show {
+            bottom: 15%;
+        }
+        
+        #resultsPanel.hide {
+            bottom: -100%;
+        }
+        
+        .panel-divider {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: #552e15;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            z-index: 1;
+        }
+        
+        .panel-divider:nth-of-type(1) {
+            top: 33.33%;
+        }
+        
+        .panel-divider:nth-of-type(2) {
+            top: 66.66%;
+        }
+        
+        .panel-section {
+            position: absolute;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+        }
+        
+        .panel-section.top {
+            top: 0;
+            height: 33.33%;
+        }
+        
+        .panel-section.middle {
+            top: 33.33%;
+            height: 33.33%;
+            justify-content: space-around;
+            padding: 0 5%;
+        }
+        
+        .panel-section.bottom {
+            top: 66.66%;
+            height: 33.33%;
+        }
+        
+        #panelGoalText {
+            font-size: 8vh;
+            color: #333;
+            font-weight: bold;
+            letter-spacing: 0.15em;
+            opacity: 0;
+            transition: opacity 0.5s ease-in;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1vh;
+        }
+        
+        #panelGoalText.show {
+            opacity: 1;
+        }
+        
+        #choppedPercentage {
+            font-size: 8vh;
+            color: #333;
+            font-weight: bold;
+            letter-spacing: 0.15em;
+            opacity: 0;
+            transition: opacity 0.5s ease-in;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1vh;
+        }
+        
+        #choppedPercentage.show {
+            opacity: 1;
+        }
+        
+        #differenceText {
+            font-size: 8vh;
+            color: #333;
+            font-weight: bold;
+            letter-spacing: 0.15em;
+            opacity: 0;
+            transition: opacity 0.5s ease-in;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5vh;
+        }
+        
+        #differenceText.show {
+            opacity: 1;
+        }
+        
+        .difference-line {
+            display: flex;
+            align-items: baseline;
+            gap: 1vh;
+        }
+        
+        .difference-line .label-text {
+            font-size: 0.5em;
+            color: #000;
+            letter-spacing: 0.1em;
+        }
+        
+        .value-text-small {
+            font-size: 0.55em;
+            color: #FFD700;
+            -webkit-text-stroke: 1px white;
+            text-shadow: -3px 3px 8px rgba(0, 0, 0, 0.7);
+        }
+        
+        .stars-container {
+            display: flex;
+            gap: 0;
+            font-size: 0.4em;
+            justify-content: center;
+            letter-spacing: -0.15em;
+        }
+        
+        .star {
+            color: #444;
+            transition: all 0.3s ease;
+            filter: grayscale(1) brightness(0.4);
+            margin-left: -0.15em;
+            opacity: 0.5;
+        }
+        
+        .star:first-child {
+            margin-left: 0;
+        }
+        
+        .star.lit {
+            color: #FFD700;
+            -webkit-text-stroke: 0.5px white;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.6), -2px 2px 6px rgba(0, 0, 0, 0.7);
+            filter: grayscale(0) brightness(1.2);
+            opacity: 1;
+        }
+        
+        .label-text {
+            font-size: 0.4em;
+            font-weight: normal;
+            letter-spacing: 0.2em;
+            color: #000;
+        }
+        
+        .value-text {
+            font-size: 1em;
+            color: #FFD700;
+            text-shadow: -3px 3px 8px rgba(0, 0, 0, 0.7);
+            -webkit-text-stroke: 1px white;
+        }
+        
+        #choppedPercentage .value-text {
+            font-size: 1.25em;
+        }
+        
+        /* Game Buttons */
+        .game-button {
+            padding: 2vh 4vh;
+            font-size: 6vh;
+            cursor: pointer;
+            background: transparent;
+            color: #FFD700;
+            border: none;
+            border-radius: 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            -webkit-text-stroke: 1px white;
+            font-family: 'Super Trend', Arial, sans-serif;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            animation: wobbleIntermittent 4s ease-in-out infinite;
+            white-space: nowrap;
+        }
+        
+        .game-button:hover {
+            color: #FFA500;
+            transform: scale(1.1);
+            animation: wobbleHover 0.5s ease-in-out;
+        }
+        
+        @keyframes wobbleIntermittent {
+            0%, 90%, 100% { transform: rotate(0deg); }
+            92% { transform: rotate(-3deg); }
+            94% { transform: rotate(3deg); }
+            96% { transform: rotate(-3deg); }
+            98% { transform: rotate(3deg); }
+        }
+        
+        @keyframes wobbleHover {
+            0%, 100% { transform: scale(1.1) rotate(0deg); }
+            25% { transform: scale(1.1) rotate(-5deg); }
+            75% { transform: scale(1.1) rotate(5deg); }
+        }
+        
+        /* Image drop-in animation */
+        @keyframes dropBounce {
+            0% {
+                transform: translate(calc(-50% + var(--drop-x-offset)), -150%) scale(1.8) rotate(var(--drop-rotation-start));
+                opacity: 0.5;
+            }
+            45% {
+                transform: translate(-50%, -50%) scale(1) rotate(0deg);
+                opacity: 1;
+            }
+            65% {
+                transform: translate(-50%, -47%) scale(0.96) rotate(0deg);
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+        
+        #gameContainer.drop-in {
+            animation: dropBounce 0.8s cubic-bezier(0.6, 0.04, 0.4, 1.2) forwards;
+        }
+        
+        #loadingScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('benchtop.png') center center / cover no-repeat;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease-out;
+        }
+        
+        #loadingScreen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        #loadingLogo {
+            width: 40vh;
+            height: 40vh;
+            background: url('capychop.png') center center / contain no-repeat;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.6));
+            margin-bottom: 5vh;
+        }
+        
+
+        
+        #topBar {
+            position: absolute;
+            top: 2vh;
+            right: 2vh;
+            width: 20%;
+            height: 6vh;
+            background: rgba(220, 215, 205, 0.9);
+            border-radius: 50px;
+            border: 10px solid #552e15;
+            box-shadow: -3px 3px 10px rgba(0, 0, 0, 0.6);
+            z-index: 20;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0 1vh;
+        }
+        
+        .top-icon {
+            width: 3vh;
+            height: 3vh;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            filter: drop-shadow(-1px 1px 2px rgba(0, 0, 0, 0.5));
+        }
+        
+        .top-icon svg {
+            width: 100%;
+            height: 100%;
+            fill: white;
+        }
+        
+        .top-icon:hover {
+            transform: scale(1.15);
+        }
+        
+        #settingsPanel {
+            position: absolute;
+            top: -100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            height: 60%;
+            background: linear-gradient(180deg, #dcd7cd 0%, #c4bfb5 100%);
+            border-radius: 20px;
+            border: 10px solid #552e15;
+            box-shadow: 
+                -4px 4px 12px rgba(0, 0, 0, 0.7),
+                inset -3px 3px 6px rgba(0, 0, 0, 0.4);
+            z-index: 15;
+            transition: top 0.5s ease-out;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #settingsPanel.show {
+            top: 15%;
+        }
+        
+        .settings-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        
+        .settings-divider {
+            width: 100%;
+            height: 8px;
+            background: #552e15;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 2vh;
+        }
+        
+        .toggle-label {
+            font-size: 4vh;
+            font-weight: bold;
+            color: #333;
+            text-shadow: -1px 1px 3px rgba(255, 255, 255, 0.5);
+        }
+        
+        .toggle-switch {
+            position: relative;
+            width: 10vh;
+            height: 5vh;
+            background: #ccc;
+            border-radius: 5vh;
+            cursor: pointer;
+            transition: background 0.3s;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .toggle-switch.active {
+            background: #4CAF50;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            top: 0.5vh;
+            left: 0.5vh;
+            width: 4vh;
+            height: 4vh;
+            background: white;
+            border-radius: 50%;
+            transition: left 0.3s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .toggle-switch.active .toggle-slider {
+            left: 5vh;
+        }
+    </style>
+</head>
+<body>
+    <div id="loadingScreen">
+        <div id="loadingLogo"></div>
+        <button id="loadingStartButton" class="game-button">Start Game</button>
+    </div>
+    <div id="topBar">
+        <div class="top-icon" onclick="toggleProfile()">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+            </svg>
+        </div>
+        <div class="top-icon" onclick="toggleSettings()">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94L14.4 2.81c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+            </svg>
+        </div>
+    </div>
+    <div id="settingsPanel">
+        <div class="settings-section">
+            <div class="toggle-container">
+                <span class="toggle-label">Music</span>
+                <div class="toggle-switch active" id="musicToggle" onclick="toggleMusic()">
+                    <div class="toggle-slider"></div>
+                </div>
+            </div>
+        </div>
+        <div class="settings-divider"></div>
+        <div class="settings-section">
+            <!-- Reserved for future settings -->
+        </div>
+        <div class="settings-divider"></div>
+        <div class="settings-section">
+            <!-- Reserved for future settings -->
+        </div>
+    </div>
+    <div id="goalBanner">
+        <div class="banner-stripe"></div>
+        <div class="banner-stripe"></div>
+        <div class="banner-stripe"></div>
+        <div class="banner-stripe"></div>
+        <div class="banner-content">
+            <div class="banner-text banner-text-small" style="transform: translateY(5px);">Try to chop a piece that is</div>
+            <div class="banner-text banner-text-large"><span id="bannerGoalValue">50</span>%</div>
+            <div class="banner-text banner-text-small-bottom" style="transform: translateY(-5px);">of the total</div>
+        </div>
+        <div class="banner-hint">Click, tap or<br>press SPACE</div>
+    </div>
+    <div id="goalDisplay" style="display:none; position: absolute; top: 23vh; left: 2vh; z-index: 15; text-align: left; transition: opacity 0.3s ease-out;">
+        <div style="font-size: 2.5vh; color: #552e15; font-weight: normal; line-height: 1; margin-bottom: 0;">
+            GOAL:
+        </div>
+        <div style="font-size: 6.4vh; color: #4169E1; font-weight: bold; line-height: 0.8; margin-top: 0; padding-top: 0; text-shadow: -4px 4px 8px rgba(50, 50, 50, 0.8); -webkit-text-stroke: 0.5px white;">
+            <span id="goalValue">50</span>%
+        </div>
+    </div>
+    <div id="starTotalDisplay" style="position: absolute; bottom: 1vh; left: 50%; transform: translateX(-50%); z-index: 10; text-align: center; font-size: 2.5vh; color: #552e15; font-weight: bold;">
+        LAST 5: ⭐ <span id="starTotalValue">0</span>
+    </div>
+    <div id="gameContainer">
+        <canvas id="mainCanvas" width="512" height="512"></canvas>
+        <canvas id="leftCanvas" width="512" height="512" style="display:none;"></canvas>
+        <canvas id="rightCanvas" width="512" height="512" style="display:none;"></canvas>
+        <canvas id="knifeCanvas" width="512" height="512"></canvas>
+    </div>
+    <div id="resultsPanel">
+        <div class="panel-divider"></div>
+        <div class="panel-divider"></div>
+        <div class="panel-section top">
+            <div id="panelGoalText">
+                <div class="label-text">GOAL:</div>
+                <div class="value-text"><span id="panelGoalValue">50</span>%</div>
+            </div>
+        </div>
+        <div class="panel-section middle">
+            <div id="choppedPercentage">
+                <div class="label-text">MY CHOP:</div>
+                <div class="value-text"><span id="choppedValue">0</span>%</div>
+            </div>
+        </div>
+        <div class="panel-section bottom">
+            <div id="differenceText">
+                <div class="difference-line">
+                    <span class="label-text">OFF BY:</span>
+                    <span class="value-text-small"><span id="differenceValue">0</span>%</span>
+                </div>
+                <div class="stars-container">
+                    <span class="star">⭐</span>
+                    <span class="star">⭐</span>
+                    <span class="star">⭐</span>
+                    <span class="star">⭐</span>
+                    <span class="star">⭐</span>
+                    <span class="star">⭐</span>
+                    <span class="star">⭐</span>
+                    <span class="star">⭐</span>
+                    <span class="star">⭐</span>
+                    <span class="star">⭐</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="results" style="text-align: center; position: absolute; bottom: 2vh; left: 50%; transform: translateX(-50%); z-index: 10;"></div>
+
+    <script>
+        const mainCanvas = document.getElementById('mainCanvas');
+        const knifeCanvas = document.getElementById('knifeCanvas');
+        const leftCanvas = document.getElementById('leftCanvas');
+        const rightCanvas = document.getElementById('rightCanvas');
+        const mainCtx = mainCanvas.getContext('2d', { willReadFrequently: true });
+        const knifeCtx = knifeCanvas.getContext('2d');
+        const leftCtx = leftCanvas.getContext('2d', { willReadFrequently: true });
+        const rightCtx = rightCanvas.getContext('2d', { willReadFrequently: true });
+        
+        // Audio setup
+        const bgMusic = new Audio('Audio/level-up.mp3');
+        bgMusic.loop = true;
+        bgMusic.volume = 0.15;
+        
+        const clickSound = new Audio('Audio/click_001.ogg');
+        clickSound.volume = 1.0;
+        
+        const chopSound = new Audio('Audio/chop.ogg');
+        chopSound.volume = 1.0;
+        
+        const bloopSound = new Audio('Audio/bloopip.ogg');
+        bloopSound.volume = 0.3;
+        
+        // Start background music on first user interaction
+        let musicStarted = false;
+        function startMusic() {
+            if (!musicStarted) {
+                bgMusic.play().catch(e => console.log('Audio autoplay prevented'));
+                musicStarted = true;
+            }
+        }
+        
+        function playClickSound() {
+            clickSound.currentTime = 0;
+            clickSound.play().catch(e => console.log('Click sound error'));
+        }
+        
+        function playChopSound() {
+            chopSound.currentTime = 0;
+            chopSound.play().catch(e => console.log('Chop sound error'));
+        }
+        
+        function playBloopSound() {
+            bloopSound.currentTime = 0;
+            bloopSound.play().catch(e => console.log('Bloop sound error'));
+        }
+        
+        function calculateStars(diff) {
+            // Round to match displayed value (1 decimal place)
+            const displayedDiff = Math.round(diff * 10) / 10;
+            
+            // More forgiving scoring system
+            if (displayedDiff === 0) return 10;  // Shows as 0.0%
+            if (displayedDiff <= 0.5) return 9;
+            if (displayedDiff <= 1.0) return 8;
+            if (displayedDiff <= 2.0) return 7;
+            if (displayedDiff <= 5.0) return 6;
+            if (displayedDiff <= 10.0) return 5;
+            if (displayedDiff <= 15.0) return 4;
+            if (displayedDiff <= 20.0) return 3;
+            if (displayedDiff <= 30.0) return 2;
+            return 1; // 30%+
+        }
+        
+        function lightUpStars(numStars) {
+            const stars = document.querySelectorAll('.star');
+            stars.forEach((star, index) => {
+                if (index < numStars) {
+                    setTimeout(() => {
+                        star.classList.add('lit');
+                        playBloopSound();
+                    }, index * 200); // Stagger at 0.2s per star
+                } else {
+                    star.classList.remove('lit');
+                }
+            });
+        }
+        
+        function updateStarHistory(numStars) {
+            // Add new stars to history
+            starHistory.push(numStars);
+            
+            // Keep only last 5 rounds
+            if (starHistory.length > 5) {
+                starHistory.shift();
+            }
+            
+            // Update display
+            updateStarTotalDisplay();
+        }
+        
+        function updateStarTotalDisplay() {
+            const total = starHistory.reduce((sum, stars) => sum + stars, 0);
+            document.getElementById('starTotalValue').textContent = total;
+        }
+        
+        let imgData, width, height, totalOpaque = 0;
+        let isChopped = false;
+        let animationId;
+        let time = 0;
+        let canvasSize = 512;
+        let currentGoal = 50;
+        let availableImages = [];
+        let starHistory = []; // Track last 5 rounds' star counts
+
+        // Animation params
+        const hoverSpeed = 0.02;
+        const angleSpeed = 0.005;
+        let currentX = canvasSize / 2;
+        let currentAngle = 0;
+
+        // Load list of available images
+        async function loadImageList() {
+            try {
+                const response = await fetch('/images/');
+                const text = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(text, 'text/html');
+                const links = Array.from(doc.querySelectorAll('a'))
+                    .map(a => a.getAttribute('href'))
+                    .filter(href => href && (href.endsWith('.png') || href.endsWith('.jpg') || href.endsWith('.jpeg')));
+                availableImages = links.map(link => `/images/${link}`);
+                if (availableImages.length === 0) {
+                    alert('No images found in the images folder! Please add PNG/JPG images to the images folder.');
+                }
+            } catch (error) {
+                console.error('Error loading image list:', error);
+                alert('Could not load images from folder');
+            }
+        }
+
+        // Set canvas internal resolution
+        function setCanvasSize() {
+            [mainCanvas, knifeCanvas, leftCanvas, rightCanvas].forEach(canvas => {
+                canvas.width = canvasSize;
+                canvas.height = canvasSize;
+            });
+        }
+
+        // Add white outline to image
+        function addWhiteOutline(imageData, thickness) {
+            const w = imageData.width;
+            const h = imageData.height;
+            const data = imageData.data;
+            const outlined = new ImageData(w, h);
+            const outData = outlined.data;
+            
+            // Copy original image
+            for (let i = 0; i < data.length; i++) {
+                outData[i] = data[i];
+            }
+            
+            // For each pixel, check if it's opaque and add white outline around it
+            for (let y = 0; y < h; y++) {
+                for (let x = 0; x < w; x++) {
+                    const idx = (y * w + x) * 4;
+                    
+                    // Check if current pixel is opaque
+                    if (data[idx + 3] > 0) {
+                        // Check surrounding pixels in a square radius
+                        for (let dy = -thickness; dy <= thickness; dy++) {
+                            for (let dx = -thickness; dx <= thickness; dx++) {
+                                const dist = Math.sqrt(dx * dx + dy * dy);
+                                // Only outline within circular radius
+                                if (dist <= thickness) {
+                                    const ny = y + dy;
+                                    const nx = x + dx;
+                                    
+                                    if (nx >= 0 && nx < w && ny >= 0 && ny < h) {
+                                        const nIdx = (ny * w + nx) * 4;
+                                        // If neighbor is transparent, make it white
+                                        if (data[nIdx + 3] === 0) {
+                                            // Solid white with just a tiny fade at the very edge
+                                            const edgeFade = dist > thickness - 1 ? 200 : 255;
+                                            if (outData[nIdx + 3] < edgeFade) {
+                                                outData[nIdx] = 255;     // R
+                                                outData[nIdx + 1] = 255; // G
+                                                outData[nIdx + 2] = 255; // B
+                                                outData[nIdx + 3] = edgeFade; // A
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            return outlined;
+        }
+
+        // Initialize on load
+        window.addEventListener('load', () => {
+            setCanvasSize();
+            loadImageList();
+        });
+        
+        window.addEventListener('resize', () => {
+            if (!isChopped) {
+                setCanvasSize();
+                if (imgData) {
+                    mainCtx.putImageData(imgData, 0, 0);
+                }
+            }
+        });
+
+        // Load random image and start game
+        function startGame() {
+            playClickSound();
+            startMusic();
+            
+            if (availableImages.length === 0) {
+                alert('No images found! Please add images to the images folder.');
+                return;
+            }
+            
+            // Check if panel is showing, slide it down first
+            const panel = document.getElementById('resultsPanel');
+            
+            if (panel.classList.contains('show')) {
+                panel.classList.remove('show');
+                panel.classList.add('hide');
+                
+                // Wait for panel to slide down before continuing
+                setTimeout(() => {
+                    panel.classList.remove('hide');
+                    continueStartGame();
+                }, 500);
+            } else {
+                continueStartGame();
+            }
+        }
+        
+        function continueStartGame() {
+            // Reset all stars to grey
+            const stars = document.querySelectorAll('.star');
+            stars.forEach(star => star.classList.remove('lit'));
+            
+            // Pick random goal between 0 and 100
+            currentGoal = Math.floor(Math.random() * 101);
+            document.getElementById('goalValue').textContent = currentGoal;
+            document.getElementById('bannerGoalValue').textContent = currentGoal;
+            
+            // Show banner and wait for user to continue
+            showGoalBanner();
+        }
+        
+        // Show the goal banner
+        function showGoalBanner() {
+            const banner = document.getElementById('goalBanner');
+            console.log('Showing banner:', banner);
+            banner.classList.remove('hiding');
+            banner.classList.add('show');
+            
+            // Prevent immediate dismissal from the button click
+            setTimeout(() => {
+                // Set up one-time event listeners to dismiss banner
+                const dismissBanner = () => {
+                    console.log('Dismissing banner');
+                    playClickSound();
+                    banner.classList.add('hiding');
+                    
+                    // Wait for animation to complete before hiding
+                    setTimeout(() => {
+                        banner.classList.remove('show', 'hiding');
+                        loadImageAndStartRound();
+                    }, 500); // Wait for slide-out animation
+                    
+                    document.removeEventListener('click', dismissBanner);
+                    document.removeEventListener('keydown', dismissOnSpace);
+                    banner.removeEventListener('touchstart', dismissBanner);
+                };
+                
+                const dismissOnSpace = (e) => {
+                    if (e.code === 'Space') {
+                        e.preventDefault();
+                        dismissBanner();
+                    }
+                };
+                
+                document.addEventListener('click', dismissBanner);
+                document.addEventListener('keydown', dismissOnSpace);
+                banner.addEventListener('touchstart', dismissBanner);
+            }, 100); // Small delay to prevent immediate dismissal
+        }
+        
+        // Load image and start the actual round
+        function loadImageAndStartRound() {
+            // Clean up UI from previous round (without starting animation yet)
+            const leftCanvas = document.getElementById('leftCanvas');
+            const rightCanvas = document.getElementById('rightCanvas');
+            
+            leftCanvas.style.display = 'none';
+            rightCanvas.style.display = 'none';
+            leftCanvas.style.transform = '';
+            rightCanvas.style.transform = '';
+            leftCanvas.style.opacity = '1';
+            rightCanvas.style.opacity = '1';
+            leftCanvas.style.transition = '';
+            rightCanvas.style.transition = '';
+            
+            // Reset results panel
+            const panel = document.getElementById('resultsPanel');
+            panel.classList.remove('show');
+            document.getElementById('panelGoalText').classList.remove('show');
+            document.getElementById('choppedPercentage').classList.remove('show');
+            document.getElementById('differenceText').classList.remove('show');
+            
+            document.getElementById('results').innerHTML = '';
+            
+            // Pick random image
+            const randomImage = availableImages[Math.floor(Math.random() * availableImages.length)];
+            
+            const goalDisplay = document.getElementById('goalDisplay');
+            goalDisplay.style.display = 'block';
+            goalDisplay.style.opacity = '1';
+            
+            const img = new Image();
+            img.onload = () => {
+                setCanvasSize();
+                width = height = canvasSize;
+                mainCtx.clearRect(0, 0, width, height);
+                
+                // Calculate aspect ratio and positioning to center image without stretching
+                const imgAspect = img.width / img.height;
+                const canvasAspect = width / height;
+                
+                let drawWidth, drawHeight, drawX, drawY;
+                
+                // Fit image inside canvas while maintaining aspect ratio
+                if (imgAspect > canvasAspect) {
+                    // Image is wider - fit to width
+                    drawWidth = width;
+                    drawHeight = width / imgAspect;
+                    drawX = 0;
+                    drawY = (height - drawHeight) / 2;
+                } else {
+                    // Image is taller - fit to height
+                    drawHeight = height;
+                    drawWidth = height * imgAspect;
+                    drawX = (width - drawWidth) / 2;
+                    drawY = 0;
+                }
+                
+                // Draw image centered without stretching
+                mainCtx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
+                const tempData = mainCtx.getImageData(0, 0, width, height);
+                
+                // Add white outline by expanding opaque pixels
+                const outlined = addWhiteOutline(tempData, 8); // 8px thick outline
+                
+                // Clear and draw the outlined image
+                mainCtx.clearRect(0, 0, width, height);
+                mainCtx.putImageData(outlined, 0, 0);
+                
+                imgData = mainCtx.getImageData(0, 0, width, height);
+                countTotalOpaque();
+                isChopped = false;
+                
+                const gameContainer = document.getElementById('gameContainer');
+                const mainCanvas = document.getElementById('mainCanvas');
+                
+                // Reset and prepare for drop animation
+                gameContainer.classList.remove('drop-in');
+                mainCanvas.style.display = 'none';
+                document.getElementById('leftCanvas').style.display = 'none';
+                document.getElementById('rightCanvas').style.display = 'none';
+                document.getElementById('results').innerHTML = '';
+                
+                // Set random drop properties
+                const randomXOffset = (Math.random() - 0.5) * 40; // Random horizontal offset -20vh to +20vh
+                const randomRotation = (Math.random() - 0.5) * 30; // Random rotation -15deg to +15deg
+                gameContainer.style.setProperty('--drop-x-offset', `${randomXOffset}vh`);
+                gameContainer.style.setProperty('--drop-rotation-start', `${randomRotation}deg`);
+                
+                // Trigger drop-in animation
+                setTimeout(() => {
+                    mainCanvas.style.display = 'block';
+                    gameContainer.classList.add('drop-in');
+                    
+                    // Start knife animation after drop completes
+                    setTimeout(() => {
+                        time = 0;
+                        currentX = width / 2;
+                        currentAngle = 0;
+                        minX = 50;
+                        maxX = width - 50;
+                        startAnimation();
+                    }, 800); // Wait for drop animation to complete
+                }, 50);
+            };
+            img.src = randomImage;
+        }
+
+        // Count total non-transparent pixels
+        function countTotalOpaque() {
+            totalOpaque = 0;
+            const data = imgData.data;
+            for (let i = 3; i < data.length; i += 4) {
+                if (data[i] > 0) totalOpaque++;
+            }
+        }
+
+        // Start hover animation
+        function startAnimation() {
+            if (animationId) cancelAnimationFrame(animationId);
+            animate();
+        }
+
+        // Animate knife hover: back/forth X, varying angle
+        function animate() {
+            time += 1;
+            // Horizontal back and forth
+            currentX = minX + (maxX - minX) * (Math.sin(time * hoverSpeed) + 1) / 2;
+            // Varying angle: oscillate between -45 to 45 degrees
+            currentAngle = Math.sin(time * angleSpeed) * (Math.PI / 4);
+
+            if (!isChopped) {
+                redrawWithShadow();
+            }
+
+            animationId = requestAnimationFrame(animate);
+        }
+
+        // Redraw original + angled knife shadow
+        function redrawWithShadow() {
+            // Clear main? No, only knife overlay
+            knifeCtx.clearRect(0, 0, width, height);
+            mainCtx.putImageData(imgData, 0, 0); // Ensure original is always shown under
+
+            // Draw angled line through (currentX, height/2) at currentAngle
+            const midY = height / 2;
+            const startX = currentX - 1000 * Math.cos(currentAngle); // Extend line
+            const startY = midY - 1000 * Math.sin(currentAngle);
+            const endX = currentX + 1000 * Math.cos(currentAngle);
+            const endY = midY + 1000 * Math.sin(currentAngle);
+
+            knifeCtx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
+            knifeCtx.lineWidth = 2;
+            knifeCtx.setLineDash([5, 5]);
+            knifeCtx.beginPath();
+            knifeCtx.moveTo(startX, startY);
+            knifeCtx.lineTo(endX, endY);
+            knifeCtx.stroke();
+            knifeCtx.setLineDash([]);
+
+            // Optional: Draw knife tip dot
+            knifeCtx.fillStyle = 'red';
+            knifeCtx.beginPath();
+            knifeCtx.arc(currentX, midY, 5, 0, 2 * Math.PI);
+            knifeCtx.fill();
+        }
+
+        // Chop on click/space (uses current position/angle)
+        function chop() {
+            if (isChopped) return;
+            isChopped = true;
+            playChopSound();
+            cancelAnimationFrame(animationId);
+            
+            // Fade out the goal display quickly
+            const goalDisplay = document.getElementById('goalDisplay');
+            goalDisplay.style.opacity = '0';
+
+            // Line through (currentX, midY) at angle currentAngle
+            // Normal vector: perpendicular to direction
+            const dirX = Math.cos(currentAngle);
+            const dirY = Math.sin(currentAngle);
+            const a = -dirY; // Normal
+            const b = dirX;
+            const pointX = currentX;
+            const pointY = height / 2;
+            const c = -(a * pointX + b * pointY);
+
+            const data = imgData.data;
+            const leftData = new ImageData(new Uint8ClampedArray(data), width, height);
+            const rightData = new ImageData(new Uint8ClampedArray(data), width, height);
+            let leftOpaque = 0;
+
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const idx = (y * width + x) * 4;
+                    const side = a * x + b * y + c; // <0 left, >0 right
+                    const alpha = data[idx + 3];
+
+                    if (side < 0) { // Left side
+                        if (alpha === 0) {
+                            leftData.data[idx + 3] = 0; // Ensure transparent stays
+                        } else {
+                            leftOpaque++;
+                        }
+                    } else {
+                        // Mask out left
+                        leftData.data[idx] = leftData.data[idx + 1] = leftData.data[idx + 2] = leftData.data[idx + 3] = 0;
+                    }
+
+                    if (side >= 0) { // Right side
+                        if (alpha > 0) {
+                            // Keep right
+                        } else {
+                            rightData.data[idx + 3] = 0;
+                        }
+                    } else {
+                        // Mask out right
+                        rightData.data[idx] = rightData.data[idx + 1] = rightData.data[idx + 2] = rightData.data[idx + 3] = 0;
+                    }
+                }
+            }
+
+            const rightOpaque = totalOpaque - leftOpaque;
+            const leftPct = totalOpaque > 0 ? (leftOpaque / totalOpaque) * 100 : 0;
+            const score = Math.abs(leftPct - currentGoal);
+
+            leftCtx.putImageData(leftData, 0, 0);
+            rightCtx.putImageData(rightData, 0, 0);
+
+            // Hide main canvas, show split pieces
+            document.getElementById('mainCanvas').style.display = 'none';
+            document.getElementById('leftCanvas').style.display = 'block';
+            document.getElementById('rightCanvas').style.display = 'block';
+
+            // Calculate perpendicular direction for blowback
+            // The pieces should move perpendicular to the chop line
+            const normalX = -dirY;  // Perpendicular to cut direction
+            const normalY = dirX;
+            
+            // Move left piece in negative normal direction, right piece in positive
+            const moveDistance = 20; // pixels to move apart (subtle movement)
+            const leftCanvas = document.getElementById('leftCanvas');
+            const rightCanvas = document.getElementById('rightCanvas');
+            
+            leftCanvas.style.transform = `translate(${-normalX * moveDistance}px, ${-normalY * moveDistance}px) rotate(${-currentAngle * 180 / Math.PI * 0.1}deg)`;
+            rightCanvas.style.transform = `translate(${normalX * moveDistance}px, ${normalY * moveDistance}px) rotate(${currentAngle * 180 / Math.PI * 0.1}deg)`;
+
+            const rightPct = 100 - leftPct;
+            
+            // Calculate which piece is closest to goal
+            const leftDiff = Math.abs(leftPct - currentGoal);
+            const rightDiff = Math.abs(rightPct - currentGoal);
+            
+            const closestIsLeft = leftDiff < rightDiff;
+            const closestPct = closestIsLeft ? leftPct : rightPct;
+            const closestCanvas = closestIsLeft ? leftCanvas : rightCanvas;
+            const farthestCanvas = closestIsLeft ? rightCanvas : leftCanvas;
+            const closestData = closestIsLeft ? leftData : rightData;
+            
+            // Wait 2 seconds, then start animation sequence
+            setTimeout(() => {
+                // Step 1: Fade away the farthest piece and darken the closest
+                farthestCanvas.style.transition = 'opacity 0.8s ease-out';
+                farthestCanvas.style.opacity = '0';
+                
+                // Darken the closest piece
+                const closestCtx = closestCanvas.getContext('2d', { willReadFrequently: true });
+                const originalData = closestCtx.getImageData(0, 0, width, height);
+                
+                let darknessLevel = 0;
+                const darkenInterval = setInterval(() => {
+                    darknessLevel += 0.05;
+                    if (darknessLevel >= 0.85) {
+                        darknessLevel = 0.85;
+                        clearInterval(darkenInterval);
+                        
+                        // Step 2: Swipe up the panel
+                        setTimeout(() => {
+                            const panel = document.getElementById('resultsPanel');
+                            panel.classList.add('show');
+                            
+                            // Clean up the chopped pieces - hide them completely
+                            setTimeout(() => {
+                                leftCanvas.style.display = 'none';
+                                rightCanvas.style.display = 'none';
+                                document.getElementById('mainCanvas').style.display = 'none';
+                            }, 300); // Hide after panel starts sliding up
+                            
+                            setTimeout(() => {
+                                // Step 3: Show Goal text (1s after panel)
+                                document.getElementById('panelGoalValue').textContent = currentGoal.toFixed(0);
+                                document.getElementById('panelGoalText').classList.add('show');
+                                
+                                setTimeout(() => {
+                                    // Step 4: Animate chopped percentage counting up (1s after goal)
+                                    document.getElementById('choppedPercentage').classList.add('show');
+                                    
+                                    // Animate from 0 to target value over 2 seconds with easing
+                                    const targetValue = closestPct;
+                                    const duration = 2000; // 2 seconds
+                                    const startTime = Date.now();
+                                    let lastBloopMarker = -1; // Track when to play bloop sound
+                                    
+                                    const animateCount = () => {
+                                        const elapsed = Date.now() - startTime;
+                                        const progress = Math.min(elapsed / duration, 1);
+                                        
+                                        // Ease out cubic for smooth deceleration
+                                        const eased = 1 - Math.pow(1 - progress, 3);
+                                        const currentValue = eased * targetValue;
+                                        
+                                        // Play bloop sound at x.0 and x.5 markers only
+                                        const roundedValue = Math.round(currentValue * 2) / 2; // Round to nearest 0.5
+                                        const currentMarker = Math.floor(roundedValue * 2); // Convert to integer marker (10.0->20, 10.5->21, 11.0->22)
+                                        if (currentMarker > lastBloopMarker && currentValue >= roundedValue - 0.05) {
+                                            playBloopSound();
+                                            lastBloopMarker = currentMarker;
+                                        }
+                                        
+                                        document.getElementById('choppedValue').textContent = currentValue.toFixed(1);
+                                        
+                                        if (progress < 1) {
+                                            requestAnimationFrame(animateCount);
+                                        } else {
+                                            // Ensure we end at exact value
+                                            document.getElementById('choppedValue').textContent = targetValue.toFixed(1);
+                                            
+                                            // Step 5: Fade in difference (1s after count finishes)
+                                            setTimeout(() => {
+                                                const diff = Math.min(leftDiff, rightDiff);
+                                                document.getElementById('differenceValue').textContent = diff.toFixed(1);
+                                                document.getElementById('differenceText').classList.add('show');
+                                                
+                                                // Light up stars based on accuracy
+                                                const numStars = calculateStars(diff);
+                                                setTimeout(() => {
+                                                    lightUpStars(numStars);
+                                                    updateStarHistory(numStars);
+                                                }, 300); // Small delay after panel shows
+                                                
+                                                // Show New Chop button
+                                                setTimeout(() => {
+                                                    document.getElementById('results').innerHTML = `
+                                                        <button onclick="startGame()" class="game-button">New Chop</button>
+                                                    `;
+                                                }, 1000);
+                                            }, 1000);
+                                        }
+                                    };
+                                    
+                                    animateCount();
+                                }, 1000);
+                            }, 1000);
+                        }, 100); // Small delay after darkening completes
+                    }
+                    
+                    closestCtx.putImageData(originalData, 0, 0);
+                    closestCtx.globalCompositeOperation = 'source-atop';
+                    closestCtx.fillStyle = `rgba(0, 0, 0, ${darknessLevel})`;
+                    closestCtx.fillRect(0, 0, width, height);
+                    closestCtx.globalCompositeOperation = 'source-over';
+                }, 50);
+                
+                farthestCanvas.style.display = 'none';
+            }, 2000);
+        }
+
+        // Reset for new chop
+        function resetGame() {
+            isChopped = false;
+            const leftCanvas = document.getElementById('leftCanvas');
+            const rightCanvas = document.getElementById('rightCanvas');
+            
+            // Clear all canvases
+            leftCtx.clearRect(0, 0, width, height);
+            rightCtx.clearRect(0, 0, width, height);
+            knifeCtx.clearRect(0, 0, width, height);
+            
+            document.getElementById('mainCanvas').style.display = 'block';
+            leftCanvas.style.display = 'none';
+            rightCanvas.style.display = 'none';
+            leftCanvas.style.transform = '';
+            rightCanvas.style.transform = '';
+            leftCanvas.style.opacity = '1';
+            rightCanvas.style.opacity = '1';
+            leftCanvas.style.transition = '';
+            rightCanvas.style.transition = '';
+            
+            // Reset results panel
+            const panel = document.getElementById('resultsPanel');
+            panel.classList.remove('show');
+            document.getElementById('panelGoalText').classList.remove('show');
+            document.getElementById('choppedPercentage').classList.remove('show');
+            document.getElementById('differenceText').classList.remove('show');
+            
+            document.getElementById('results').innerHTML = '';
+            time = 0;
+            currentX = width / 2;
+            currentAngle = 0;
+            startAnimation();
+        }
+
+        // Events
+        const gameContainer = document.getElementById('gameContainer');
+        mainCanvas.addEventListener('click', chop);
+        gameContainer.addEventListener('click', chop);
+        document.addEventListener('keydown', (e) => { if (e.code === 'Space') { e.preventDefault(); chop(); } });
+        // Touch
+        mainCanvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            chop();
+        });
+        gameContainer.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            chop();
+        });
+        
+        // Settings panel toggle
+        function toggleSettings() {
+            const panel = document.getElementById('settingsPanel');
+            panel.classList.toggle('show');
+        }
+        
+        // Profile toggle (placeholder for future)
+        function toggleProfile() {
+            console.log('Profile clicked - feature coming soon!');
+        }
+        
+        // Music toggle
+        let musicEnabled = true;
+        function toggleMusic() {
+            musicEnabled = !musicEnabled;
+            const toggle = document.getElementById('musicToggle');
+            toggle.classList.toggle('active');
+            
+            if (musicEnabled) {
+                if (musicStarted) {
+                    bgMusic.play().catch(e => console.log('Music play error'));
+                }
+            } else {
+                bgMusic.pause();
+            }
+        }
+        
+        // Loading screen
+        document.getElementById('loadingStartButton').addEventListener('click', function() {
+            // Hide loading screen
+            const loadingScreen = document.getElementById('loadingScreen');
+            loadingScreen.classList.add('hidden');
+            
+            // After fade out, remove it and start the game
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+                startGame();
+            }, 500);
+        });
+        
+        // Initialize
+        loadImages();
+    </script>
+</body>
+</html>

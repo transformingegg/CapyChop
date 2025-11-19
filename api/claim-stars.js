@@ -40,6 +40,8 @@ export default async function handler(req, res) {
     
     console.log(`✍️  Signed claim for ${walletAddress}: ${starsEarned} stars`);
     
+    console.log('🔍 Signature data to return:', signatureData);
+    
     res.status(200).json(signatureData);
   } catch (error) {
     console.error('Signing error:', error);

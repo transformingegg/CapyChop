@@ -2,8 +2,8 @@ import { ethers } from 'ethers';
 
 // Server-side only - accesses private key from environment
 const GAME_SIGNER_PRIVATE_KEY = process.env.GAME_SIGNER_PRIVATE_KEY;
-const STARS_CONTRACT_ADDRESS = process.env.VITE_STARS_CONTRACT_ADDRESS;
-const CHAIN_ID = Number(process.env.VITE_CHAIN_ID);
+const STARS_CONTRACT_ADDRESS = process.env.STARS_CONTRACT_ADDRESS || process.env.VITE_STARS_CONTRACT_ADDRESS;
+const CHAIN_ID = Number(process.env.CHAIN_ID || process.env.VITE_CHAIN_ID);
 
 if (!GAME_SIGNER_PRIVATE_KEY) {
   throw new Error('GAME_SIGNER_PRIVATE_KEY not set in environment variables');

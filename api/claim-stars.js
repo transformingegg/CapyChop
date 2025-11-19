@@ -32,7 +32,7 @@ export default async function handler(req, res) {
     // - Prevent abuse
     
     const nonce = nonceCounter++;
-    const signatureData = generateStarClaimSignature(
+    const signatureData = await generateStarClaimSignature(
       walletAddress,
       starsEarned,
       nonce

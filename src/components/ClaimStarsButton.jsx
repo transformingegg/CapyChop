@@ -124,8 +124,11 @@ export function ClaimStarsButton({ starsToClaim, onClaimSuccess }) {
         throw new Error(errorData.error || 'Failed to get signature');
       }
 
-      const { signature, nonce, deadline, amount } = await response.json();
-      console.log('✅ Got signature:', { nonce, deadline, amount });
+      const responseData = await response.json();
+      console.log('🔍 Raw API response:', responseData);
+      
+      const { signature, nonce, deadline, amount } = responseData;
+      console.log('✅ Got signature data:', { signature, nonce, deadline, amount });
 
       // Call contract - this will open MetaMask
       console.log('📝 Calling contract with args:', [amount, nonce, deadline, signature]);

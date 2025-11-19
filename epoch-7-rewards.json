@@ -1,0 +1,30 @@
+{
+  "epoch": 7,
+  "merkleRoot": "0xc99a121a4ca8ee672ac4147f236645c41ced4692136c385cb8d2873511a5d766",
+  "timestamp": "2025-11-18T13:35:33.042Z",
+  "totalPlayers": 2,
+  "rewards": [
+    {
+      "address": "0xF9e5Ed59d4AF8aca432d08ccD1600e6F77526152",
+      "stars": 7,
+      "rank": 1,
+      "percentile": "50.00",
+      "rewardAmount": "7387961300000000000000",
+      "rewardAmountFormatted": "7387.9613 CHOPS",
+      "proof": [
+        "0xdc97d24cbd28f1dd3a20a45666cfe6942f1f40b8c87516324ae9d0c64e195775"
+      ]
+    },
+    {
+      "address": "0x61E3CEF3Bc04e141EA2a03a62CD9293D16c82344",
+      "stars": 3,
+      "rank": 2,
+      "percentile": "100.00",
+      "rewardAmount": "2612038700000000000000",
+      "rewardAmountFormatted": "2612.0387 CHOPS",
+      "proof": [
+        "0xc9818e7f693cd41081f094f4ee482fb42638b878a2715ec39c3c272d0ef51ef7"
+      ]
+    }
+  ]
+}

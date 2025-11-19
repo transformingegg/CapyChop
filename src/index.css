@@ -1,0 +1,21 @@
+@font-face {
+    font-family: 'Super Trend';
+    src: url('/SuperTrend.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+* { 
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Super Trend', Arial, sans-serif;
+}
+
+#root {
+    width: 100%;
+    height: 100vh;
+}

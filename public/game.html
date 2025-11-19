@@ -7,6 +7,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <title>Chop Chop Game</title>
+    
+    <!-- Web3 Dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    
     <style>
         @font-face {
             font-family: 'Super Trend';
@@ -175,7 +179,7 @@
             color: white;
             text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
             position: absolute;
-            bottom: 2vh;
+            bottom: 11vh !important;
             left: 50%;
             transform: translateX(-50%);
             z-index: 10;
@@ -597,7 +601,7 @@
         
         /* Game Buttons */
         .game-button {
-            padding: 2vh 4vh;
+            padding: 1vh 2vh;
             font-size: 6vh;
             cursor: pointer;
             background: transparent;
@@ -611,6 +615,8 @@
             transition: all 0.3s ease;
             animation: wobbleIntermittent 4s ease-in-out infinite;
             white-space: nowrap;
+            display: inline-block;
+            line-height: 1;
         }
         
         .game-button:hover {
@@ -690,12 +696,13 @@
             position: absolute;
             top: 2vh;
             right: 2vh;
-            width: 20%;
-            height: 6vh;
+            width: 22%;
+            height: 7vh;
             background: rgba(220, 215, 205, 0.9);
             border-radius: 50px;
-            border: 10px solid #552e15;
-            box-shadow: -3px 3px 10px rgba(0, 0, 0, 0.6);
+            box-shadow: 
+                0 4px 12px rgba(0, 0, 0, 0.5),
+                0 2px 4px rgba(0, 0, 0, 0.3);
             z-index: 20;
             display: flex;
             justify-content: space-around;
@@ -715,6 +722,11 @@
             width: 100%;
             height: 100%;
             fill: white;
+            transition: fill 0.3s ease;
+        }
+        
+        .top-icon.connected svg {
+            fill: #4169E1; /* Dark blue when connected */
         }
         
         .top-icon:hover {
@@ -734,7 +746,7 @@
             box-shadow: 
                 -4px 4px 12px rgba(0, 0, 0, 0.7),
                 inset -3px 3px 6px rgba(0, 0, 0, 0.4);
-            z-index: 15;
+            z-index: 50;
             transition: top 0.5s ease-out;
             display: flex;
             flex-direction: column;
@@ -803,6 +815,144 @@
         .toggle-switch.active .toggle-slider {
             left: 5vh;
         }
+        
+        /* Profile Panel */
+        #profilePanel {
+            position: absolute;
+            top: -100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            height: 60%;
+            background: linear-gradient(180deg, #dcd7cd 0%, #c4bfb5 100%);
+            border-radius: 20px;
+            border: 10px solid #552e15;
+            box-shadow: 
+                -4px 4px 12px rgba(0, 0, 0, 0.7),
+                inset -3px 3px 6px rgba(0, 0, 0, 0.4);
+            z-index: 50;
+            transition: top 0.5s ease-out;
+            display: flex;
+            flex-direction: column;
+            padding: 3vh;
+        }
+        
+        #profilePanel.show {
+            top: 15%;
+        }
+        
+        .profile-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 2vh;
+        }
+
+        /* Close button for panels */
+        .panel-close-btn {
+            position: absolute;
+            top: 1.5vh;
+            right: 1.5vh;
+            width: 4vh;
+            height: 4vh;
+            background: rgba(85, 46, 21, 0.8);
+            border: 2px solid #3a1f0f;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            z-index: 100;
+        }
+
+        .panel-close-btn:hover {
+            background: rgba(85, 46, 21, 1);
+            transform: scale(1.1);
+        }
+
+        .panel-close-btn::before,
+        .panel-close-btn::after {
+            content: '';
+            position: absolute;
+            width: 2.5vh;
+            height: 0.4vh;
+            background: white;
+            border-radius: 0.2vh;
+        }
+
+        .panel-close-btn::before {
+            transform: rotate(45deg);
+        }
+
+        .panel-close-btn::after {
+            transform: rotate(-45deg);
+        }
+
+        /* Info Panel */
+        #infoPanel {
+            position: absolute;
+            top: -100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 600px;
+            background: linear-gradient(180deg, #dcd7cd 0%, #c4bfb5 100%);
+            border-radius: 20px;
+            border: 10px solid #552e15;
+            box-shadow: 
+                -4px 4px 12px rgba(0, 0, 0, 0.7),
+                inset -3px 3px 6px rgba(0, 0, 0, 0.4);
+            z-index: 50;
+            transition: top 0.5s ease-out;
+            padding: 4vh 3vh;
+        }
+
+        #infoPanel.show {
+            top: 15%;
+        }
+
+        .info-content {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            color: #552e15;
+            line-height: 1.6;
+        }
+
+        .info-title {
+            font-size: 3vh;
+            font-weight: bold;
+            margin-bottom: 2vh;
+            text-align: center;
+        }
+
+        .info-text {
+            font-size: 2vh;
+            margin-bottom: 1.5vh;
+        }
+
+        .info-highlight {
+            background: rgba(74, 144, 226, 0.2);
+            padding: 0.3vh 0.8vh;
+            border-radius: 0.5vh;
+            font-weight: 600;
+        }
+        
+        .profile-title {
+            font-size: 5vh;
+            font-weight: bold;
+            color: #552e15;
+            text-shadow: -1px 1px 3px rgba(255, 255, 255, 0.5);
+            margin-bottom: 2vh;
+        }
+        
+        #walletConnectContainer {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
     </style>
 </head>
 <body>
@@ -823,6 +973,7 @@
         </div>
     </div>
     <div id="settingsPanel">
+        <div class="panel-close-btn" onclick="toggleSettings()"></div>
         <div class="settings-section">
             <div class="toggle-container">
                 <span class="toggle-label">Music</span>
@@ -840,6 +991,41 @@
             <!-- Reserved for future settings -->
         </div>
     </div>
+    
+    <!-- Profile Panel -->
+    <div id="profilePanel">
+        <div class="panel-close-btn" onclick="toggleProfile()"></div>
+        <div class="profile-section">
+            <div class="profile-title">Wallet</div>
+            <div id="walletConnectContainer">
+                <!-- RainbowKit button will be inserted here -->
+            </div>
+            <div id="claimChopsContainer">
+                <!-- ClaimChopsButton will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Info Panel -->
+    <div id="infoPanel">
+        <div class="panel-close-btn" onclick="toggleInfo()"></div>
+        <div class="info-content">
+            <div class="info-title">⭐ How Star Claiming Works</div>
+            <div class="info-text">
+                As you play CapyChop, you earn <span class="info-highlight">stars</span> based on your accuracy. The "Last 5" counter shows your total stars from your most recent 5 games.
+            </div>
+            <div class="info-text">
+                Click the <span class="info-highlight">🌟 Claim</span> button to save your stars permanently on the blockchain. This makes them part of the leaderboard for the current competition period (epoch).
+            </div>
+            <div class="info-text">
+                After claiming, there's a <span class="info-highlight">cooldown period</span> before you can claim again. The button will show a countdown timer during this time.
+            </div>
+            <div class="info-text">
+                Your stars are <span class="info-highlight">soulbound</span> - they're tied to your wallet and can't be transferred. At the end of each epoch, top players can claim Chops token rewards!
+            </div>
+        </div>
+    </div>
+    
     <div id="goalBanner">
         <div class="banner-stripe"></div>
         <div class="banner-stripe"></div>
@@ -860,8 +1046,9 @@
             <span id="goalValue">50</span>%
         </div>
     </div>
-    <div id="starTotalDisplay" style="position: absolute; bottom: 1vh; left: 50%; transform: translateX(-50%); z-index: 10; text-align: center; font-size: 2.5vh; color: #552e15; font-weight: bold;">
-        LAST 5: ⭐ <span id="starTotalValue">0</span>
+    <div id="starTotalDisplay" style="position: absolute; bottom: 1vh; left: 50%; transform: translateX(-50%); z-index: 10; text-align: center; font-size: 2.5vh; color: #552e15; font-weight: bold; display: flex; align-items: center; gap: 1.5vh; justify-content: center; white-space: nowrap; min-width: max-content;">
+        <span style="white-space: nowrap;">LAST 5: ⭐ <span id="starTotalValue">0</span></span>
+        <span id="claimStarsButton" style="display: inline-flex;"></span>
     </div>
     <div id="gameContainer">
         <canvas id="mainCanvas" width="512" height="512"></canvas>
@@ -1002,6 +1189,12 @@
         function updateStarTotalDisplay() {
             const total = starHistory.reduce((sum, stars) => sum + stars, 0);
             document.getElementById('starTotalValue').textContent = total;
+        }
+
+        // Function to reset stars after claiming (called by React)
+        function resetStarsAfterClaim() {
+            starHistory = [];
+            updateStarTotalDisplay();
         }
         
         let imgData, width, height, totalOpaque = 0;
@@ -1236,14 +1429,14 @@
                     // Image is wider - fit to width
                     drawWidth = width;
                     drawHeight = width / imgAspect;
-                    drawX = 0;
-                    drawY = (height - drawHeight) / 2;
+                    drawX = -20; // Shift left by 20px
+                    drawY = (height - drawHeight) / 2 + 15; // Shift down by 15px from center
                 } else {
                     // Image is taller - fit to height
                     drawHeight = height;
                     drawWidth = height * imgAspect;
-                    drawX = (width - drawWidth) / 2;
-                    drawY = 0;
+                    drawX = (width - drawWidth) / 2 - 20; // Shift left by 20px from center
+                    drawY = 15; // Shift down by 15px
                 }
                 
                 // Draw image centered without stretching
@@ -1328,31 +1521,44 @@
 
         // Redraw original + angled knife shadow
         function redrawWithShadow() {
-            // Clear main? No, only knife overlay
+            // Clear knife canvas
             knifeCtx.clearRect(0, 0, width, height);
             mainCtx.putImageData(imgData, 0, 0); // Ensure original is always shown under
 
-            // Draw angled line through (currentX, height/2) at currentAngle
+            // Create/update SVG line overlay instead of canvas line
+            let svgLine = document.getElementById('knifeSvgLine');
+            if (!svgLine) {
+                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.id = 'knifeSvg';
+                svg.style.position = 'absolute';
+                svg.style.top = '0';
+                svg.style.left = '0';
+                svg.style.width = '100%';
+                svg.style.height = '100%';
+                svg.style.pointerEvents = 'none';
+                svg.style.overflow = 'visible'; // Key: allow SVG content to extend beyond container
+                svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+                
+                svgLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                svgLine.id = 'knifeSvgLine';
+                svgLine.setAttribute('stroke', 'rgba(0, 0, 0, 0.5)');
+                svgLine.setAttribute('stroke-width', '4');
+                
+                svg.appendChild(svgLine);
+                document.getElementById('gameContainer').appendChild(svg);
+            }
+            
+            // Update line position
             const midY = height / 2;
-            const startX = currentX - 1000 * Math.cos(currentAngle); // Extend line
+            const startX = currentX - 1000 * Math.cos(currentAngle);
             const startY = midY - 1000 * Math.sin(currentAngle);
             const endX = currentX + 1000 * Math.cos(currentAngle);
             const endY = midY + 1000 * Math.sin(currentAngle);
-
-            knifeCtx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
-            knifeCtx.lineWidth = 2;
-            knifeCtx.setLineDash([5, 5]);
-            knifeCtx.beginPath();
-            knifeCtx.moveTo(startX, startY);
-            knifeCtx.lineTo(endX, endY);
-            knifeCtx.stroke();
-            knifeCtx.setLineDash([]);
-
-            // Optional: Draw knife tip dot
-            knifeCtx.fillStyle = 'red';
-            knifeCtx.beginPath();
-            knifeCtx.arc(currentX, midY, 5, 0, 2 * Math.PI);
-            knifeCtx.fill();
+            
+            svgLine.setAttribute('x1', startX);
+            svgLine.setAttribute('y1', startY);
+            svgLine.setAttribute('x2', endX);
+            svgLine.setAttribute('y2', endY);
         }
 
         // Chop on click/space (uses current position/angle)
@@ -1608,13 +1814,53 @@
         
         // Settings panel toggle
         function toggleSettings() {
-            const panel = document.getElementById('settingsPanel');
-            panel.classList.toggle('show');
+            const settingsPanel = document.getElementById('settingsPanel');
+            const profilePanel = document.getElementById('profilePanel');
+            const infoPanel = document.getElementById('infoPanel');
+            
+            // Close other panels if open
+            if (profilePanel.classList.contains('show')) {
+                profilePanel.classList.remove('show');
+            }
+            if (infoPanel.classList.contains('show')) {
+                infoPanel.classList.remove('show');
+            }
+            
+            settingsPanel.classList.toggle('show');
         }
         
-        // Profile toggle (placeholder for future)
+        // Profile panel toggle
         function toggleProfile() {
-            console.log('Profile clicked - feature coming soon!');
+            const profilePanel = document.getElementById('profilePanel');
+            const settingsPanel = document.getElementById('settingsPanel');
+            const infoPanel = document.getElementById('infoPanel');
+            
+            // Close other panels if open
+            if (settingsPanel.classList.contains('show')) {
+                settingsPanel.classList.remove('show');
+            }
+            if (infoPanel.classList.contains('show')) {
+                infoPanel.classList.remove('show');
+            }
+            
+            profilePanel.classList.toggle('show');
+        }
+
+        // Info panel toggle
+        function toggleInfo() {
+            const profilePanel = document.getElementById('profilePanel');
+            const settingsPanel = document.getElementById('settingsPanel');
+            const infoPanel = document.getElementById('infoPanel');
+            
+            // Close other panels if open
+            if (settingsPanel.classList.contains('show')) {
+                settingsPanel.classList.remove('show');
+            }
+            if (profilePanel.classList.contains('show')) {
+                profilePanel.classList.remove('show');
+            }
+            
+            infoPanel.classList.toggle('show');
         }
         
         // Music toggle
@@ -1665,7 +1911,26 @@
             e.preventDefault();
         }, { passive: false });
         
+        // ===== Web3 / Wallet Setup =====
+        let walletAccount = null;
+        let provider = null;
+        let signer = null;
+        
+        // Educhain configuration
+        const EDUCHAIN_CONFIG = {
+            chainId: '0xA045C', // 656476 in hex
+            chainName: 'EDU Chain',
+            nativeCurrency: {
+                name: 'EDU',
+                symbol: 'EDU',
+                decimals: 18
+            },
+            rpcUrls: ['https://rpc.open-campus-codex.gelato.digital'],
+            blockExplorerUrls: ['https://opencampus-codex.blockscout.com']
+        };
+        
         // Initialize
+        // Note: RainbowKit wallet connection is handled by React component
         loadImageList();
     </script>
 </body>

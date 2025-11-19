@@ -1,15 +1,15 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "server.js",
-      "use": "@vercel/node"
-    }
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "installCommand": "npm install",
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1" }
   ],
-  "routes": [
+  "crons": [
     {
-      "src": "/(.*)",
-      "dest": "/server.js"
+      "path": "/api/generate-rewards",
+      "schedule": "0 */2 * * *"
     }
   ]
 }

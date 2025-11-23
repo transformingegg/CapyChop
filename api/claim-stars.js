@@ -1,6 +1,9 @@
 import { generateStarClaimSignature } from '../server/signer.js';
 
-let nonceCounter = 1;
+// Use timestamp-based nonces to avoid collisions in serverless environment
+function generateNonce() {
+  return Math.floor(Date.now() / 1000); // Current timestamp in seconds
+}
 
 export default async function handler(req, res) {
   // Enable CORS
@@ -31,7 +34,7 @@ export default async function handler(req, res) {
     // - Check game score from database/session
     // - Prevent abuse
     
-    const nonce = nonceCounter++;
+    const nonce = generateNonce();
     const signatureData = await generateStarClaimSignature(
       walletAddress,
       starsEarned,

@@ -18,6 +18,9 @@ const CURVE_EXPONENT = 1.5;
 const STARS_ABI = [
   "event StarsClaimed(address indexed user, uint256 amount, uint256 epoch, uint256 nonce)",
   "function currentEpoch() view returns (uint256)",
+  "function lastResetTimestamp() view returns (uint256)",
+  "function epochDuration() view returns (uint256)",
+  "function resetEpoch() external",
   "function starsByEpoch(address user, uint256 epoch) external view returns (uint256)",
   "function setMerkleRoot(uint256 epoch, bytes32 root) external",
   "function setMerkleRootAutomated(uint256 epoch, bytes32 root) external",
@@ -29,9 +32,37 @@ const CHOPS_ABI = [
   "function decimals() view returns (uint8)"
 ];
 
-// ========================================
-// UTILITY FUNCTIONS
-// ========================================
+async function checkAndResetEpoch(starsContract, wallet) {
+  try {
+    const currentEpoch = await starsContract.currentEpoch();
+    const lastResetTimestamp = await starsContract.lastResetTimestamp();
+    const epochDuration = await starsContract.epochDuration();
+    
+    const currentTime = Math.floor(Date.now() / 1000);
+    const timeSinceLastReset = currentTime - Number(lastResetTimestamp);
+    
+    console.log(`⏰ Epoch check: current=${currentEpoch}, lastReset=${new Date(Number(lastResetTimestamp) * 1000).toISOString()}, duration=${epochDuration}s (${epochDuration / 86400} days)`);
+    console.log(`⏰ Time since last reset: ${timeSinceLastReset}s (${(timeSinceLastReset / 86400).toFixed(1)} days)`);
+    
+    if (timeSinceLastReset >= epochDuration) {
+      console.log('🔄 Epoch duration elapsed! Resetting epoch...');
+      
+      const tx = await starsContract.connect(wallet).resetEpoch();
+      await tx.wait();
+      
+      const newEpoch = await starsContract.currentEpoch();
+      console.log(`✅ Epoch reset! New epoch: ${newEpoch}`);
+      
+      return newEpoch;
+    } else {
+      console.log('⏳ Epoch duration not elapsed yet');
+      return currentEpoch;
+    }
+  } catch (error) {
+    console.error('❌ Error checking/resetting epoch:', error);
+    throw error;
+  }
+}
 
 function calculateRewards(players, totalEmission = 10000, curveExponent = 1.5) {
   const sorted = [...players].sort((a, b) => b.stars - a.stars);
@@ -98,8 +129,7 @@ async function fetchEpochPlayers(epochNumber, provider, starsContract) {
   return players.filter(p => p.stars > 0);
 }
 
-async function setMerkleRootOnChain(epochNumber, root, provider) {
-  const wallet = new ethers.Wallet(process.env.GAME_SIGNER_PRIVATE_KEY, provider);
+async function setMerkleRootOnChain(epochNumber, root, wallet) {
   const starsContract = new ethers.Contract(
     process.env.STARS_CONTRACT_ADDRESS,
     STARS_ABI,
@@ -132,14 +162,15 @@ export default async function handler(req, res) {
 
     // Setup provider and contracts
     const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
+    const wallet = new ethers.Wallet(process.env.GAME_SIGNER_PRIVATE_KEY, provider);
     const starsContract = new ethers.Contract(
       process.env.STARS_CONTRACT_ADDRESS,
       STARS_ABI,
       provider
     );
 
-    // Get current epoch
-    const currentEpoch = await starsContract.currentEpoch();
+    // Check and reset epoch if needed
+    const currentEpoch = await checkAndResetEpoch(starsContract, wallet);
     const previousEpoch = Number(currentEpoch) - 1;
 
     console.log(`📊 Current epoch: ${currentEpoch}, checking epoch: ${previousEpoch}`);
@@ -203,7 +234,7 @@ export default async function handler(req, res) {
 
     // Set Merkle root on-chain
     if (process.env.GAME_SIGNER_PRIVATE_KEY) {
-      const txHash = await setMerkleRootOnChain(previousEpoch, root, provider);
+      const txHash = await setMerkleRootOnChain(previousEpoch, root, wallet);
       console.log(`✅ Set Merkle root on-chain: ${txHash}`);
 
       return res.status(200).json({

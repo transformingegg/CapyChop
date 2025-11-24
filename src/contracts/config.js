@@ -56,6 +56,13 @@ export const STARS_ABI = [
     type: "function"
   },
   {
+    inputs: [{ name: "", type: "uint256" }],
+    name: "epochMerkleRoots",
+    outputs: [{ name: "", type: "bytes32" }],
+    stateMutability: "view",
+    type: "function"
+  },
+  {
     inputs: [{ name: "user", type: "address" }],
     name: "cooldownRemaining",
     outputs: [{ name: "", type: "uint256" }],

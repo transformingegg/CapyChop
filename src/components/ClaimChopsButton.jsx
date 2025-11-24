@@ -151,7 +151,7 @@ export function ClaimChopsButton() {
         address: STARS_CONTRACT_ADDRESS,
         abi: STARS_ABI,
         functionName: 'claimChops',
-        args: [previousEpoch, rewardData.rewardAmount, rewardData.proof],
+        args: [previousEpoch, BigInt(rewardData.rewardAmount), rewardData.proof],
       });
     } catch (err) {
       console.error('❌ Claim failed:', err);

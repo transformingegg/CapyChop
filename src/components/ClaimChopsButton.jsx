@@ -36,6 +36,15 @@ export function ClaimChopsButton() {
     enabled: !!address && isConnected && previousEpoch > 0,
   });
 
+  // Query Merkle root for previous epoch
+  const { data: merkleRootData } = useReadContract({
+    address: STARS_CONTRACT_ADDRESS,
+    abi: STARS_ABI,
+    functionName: 'epochMerkleRoots',
+    args: [previousEpoch],
+    enabled: !!address && isConnected && previousEpoch > 0,
+  });
+
   // Query Chops decimals
   const { data: chopsDecimalsData } = useReadContract({
     address: CHOPS_CONTRACT_ADDRESS,
@@ -158,6 +167,22 @@ export function ClaimChopsButton() {
           proof: Array.isArray(args[2]) ? `Array(${args[2].length})` : typeof args[2]
         }
       });
+
+      // Compute expected leaf for verification
+      const expectedLeaf = ethers.keccak256(
+        ethers.AbiCoder.defaultAbiCoder().encode(
+          ["address", "uint256"],
+          [address, BigInt(rewardData.rewardAmount)]
+        )
+      );
+      console.log('🔍 Verification data:', {
+        userAddress: address,
+        rewardAmount: rewardData.rewardAmount,
+        expectedLeaf: expectedLeaf,
+        merkleRoot: merkleRootData,
+        proof: rewardData.proof
+      });
+
       console.log('🔍 Exact args array for contract call:', args);
 
       console.log('🚀 Initiating writeContract call...');

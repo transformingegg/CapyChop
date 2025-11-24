@@ -169,11 +169,9 @@ export function ClaimChopsButton() {
       });
 
       // Compute expected leaf for verification
-      const expectedLeaf = ethers.keccak256(
-        ethers.AbiCoder.defaultAbiCoder().encode(
-          ["address", "uint256"],
-          [address, BigInt(rewardData.rewardAmount)]
-        )
+      const expectedLeaf = ethers.solidityPackedKeccak256(
+        ["address", "uint256"],
+        [address, rewardData.rewardAmount]
       );
       console.log('🔍 Verification data:', {
         userAddress: address,

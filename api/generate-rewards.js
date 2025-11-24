@@ -98,7 +98,7 @@ function generateMerkleTree(rewards) {
     )
   );
 
-  const tree = new MerkleTree(leaves, ethers.keccak256, { sortPairs: true });
+  const tree = new MerkleTree(leaves, ethers.keccak256, { sortPairs: false });
   const root = tree.getHexRoot();
 
   const proofs = rewards.map((reward, index) => ({

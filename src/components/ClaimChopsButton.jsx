@@ -53,7 +53,7 @@ export function ClaimChopsButton() {
     enabled: !!address && isConnected && !!CHOPS_CONTRACT_ADDRESS,
   });
 
-  const { writeContract, data: hash, isPending: isWritePending } = useWriteContract();
+  const { writeContract, data: hash, isPending: isWritePending, error: writeError } = useWriteContract();
   const { isLoading: isTxPending, isSuccess: isTxSuccess } = useWaitForTransactionReceipt({ hash });
 
   // Manual balance query using ethers (fallback for wagmi issues)
@@ -147,14 +147,37 @@ export function ClaimChopsButton() {
         proof: rewardData.proof
       });
 
+      const args = [BigInt(previousEpoch), BigInt(rewardData.rewardAmount), rewardData.proof];
+      console.log('📋 Contract call args:', {
+        epoch: args[0],
+        amount: args[1],
+        proof: args[2],
+        types: {
+          epoch: typeof args[0],
+          amount: typeof args[1],
+          proof: Array.isArray(args[2]) ? `Array(${args[2].length})` : typeof args[2]
+        }
+      });
+      console.log('🔍 Exact args array for contract call:', args);
+
+      console.log('🚀 Initiating writeContract call...');
       writeContract({
         address: STARS_CONTRACT_ADDRESS,
         abi: STARS_ABI,
         functionName: 'claimChops',
-        args: [BigInt(previousEpoch), BigInt(rewardData.rewardAmount), rewardData.proof],
+        args: args,
       });
+
+      console.log('✅ writeContract called successfully');
     } catch (err) {
       console.error('❌ Claim failed:', err);
+      console.error('❌ Error details:', {
+        message: err.message,
+        code: err.code,
+        data: err.data,
+        cause: err.cause,
+        stack: err.stack
+      });
       setError(err.message || 'Failed to claim Chops');
       setLoading(false);
     }

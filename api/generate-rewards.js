@@ -94,7 +94,7 @@ function generateMerkleTree(rewards) {
   const leaves = rewards.map(reward =>
     ethers.solidityPackedKeccak256(
       ["address", "uint256"],
-      [reward.address, BigInt(reward.rewardAmount)]
+      [reward.address, reward.rewardAmount] // Already a string from calculateRewards
     )
   );
 
@@ -219,7 +219,16 @@ export default async function handler(req, res) {
     // Save locally (for Vercel, this is temporary)
     const fileName = `epoch-${previousEpoch}-rewards.json`;
     const filePath = path.join('/tmp', fileName);
-    fs.writeFileSync(filePath, JSON.stringify(output, null, 2));
+    
+    // Custom JSON serializer to handle any remaining BigInts
+    const jsonString = JSON.stringify(output, (key, value) => {
+      if (typeof value === 'bigint') {
+        return value.toString();
+      }
+      return value;
+    }, 2);
+    
+    fs.writeFileSync(filePath, jsonString);
 
     // Upload to Vercel Blob
     const { put } = await import('@vercel/blob');

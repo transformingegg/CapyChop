@@ -34,15 +34,15 @@ const CHOPS_ABI = [
 
 async function checkAndResetEpoch(starsContract, wallet) {
   try {
-    const currentEpoch = await starsContract.currentEpoch();
-    const lastResetTimestamp = await starsContract.lastResetTimestamp();
-    const epochDuration = await starsContract.epochDuration();
+    const currentEpoch = Number(await starsContract.currentEpoch());
+    const lastResetTimestamp = Number(await starsContract.lastResetTimestamp());
+    const epochDuration = Number(await starsContract.epochDuration());
     
     const currentTime = Math.floor(Date.now() / 1000);
-    const timeSinceLastReset = currentTime - Number(lastResetTimestamp);
+    const timeSinceLastReset = currentTime - lastResetTimestamp;
     
-    console.log(`⏰ Epoch check: current=${currentEpoch}, lastReset=${new Date(Number(lastResetTimestamp) * 1000).toISOString()}, duration=${epochDuration}s (${epochDuration / 86400} days)`);
-    console.log(`⏰ Time since last reset: ${timeSinceLastReset}s (${(timeSinceLastReset / 86400).toFixed(1)} days)`);
+    console.log(`⏰ Epoch check: current=${currentEpoch}, lastReset=${new Date(lastResetTimestamp * 1000).toISOString()}, duration=${epochDuration}s (${(epochDuration / 3600).toFixed(1)} hours)`);
+    console.log(`⏰ Time since last reset: ${timeSinceLastReset}s (${(timeSinceLastReset / 3600).toFixed(1)} hours)`);
     
     if (timeSinceLastReset >= epochDuration) {
       console.log('🔄 Epoch duration elapsed! Resetting epoch...');
@@ -50,7 +50,7 @@ async function checkAndResetEpoch(starsContract, wallet) {
       const tx = await starsContract.connect(wallet).resetEpoch();
       await tx.wait();
       
-      const newEpoch = await starsContract.currentEpoch();
+      const newEpoch = Number(await starsContract.currentEpoch());
       console.log(`✅ Epoch reset! New epoch: ${newEpoch}`);
       
       return newEpoch;

@@ -171,7 +171,7 @@ export function ClaimChopsButton() {
       // Compute expected leaf for verification
       const expectedLeaf = ethers.solidityPackedKeccak256(
         ["address", "uint256"],
-        [address, rewardData.rewardAmount]
+        [address, BigInt(rewardData.rewardAmount)]
       );
       console.log('🔍 Verification data:', {
         userAddress: address,

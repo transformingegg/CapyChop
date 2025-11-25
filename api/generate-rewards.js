@@ -94,7 +94,7 @@ function generateMerkleTree(rewards) {
   const leaves = rewards.map(reward =>
     ethers.solidityPackedKeccak256(
       ["address", "uint256"],
-      [reward.address, reward.rewardAmount] // Already a string from calculateRewards
+      [reward.address, BigInt(reward.rewardAmount)]
     )
   );
 
